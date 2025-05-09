@@ -15,56 +15,65 @@ To write a YACC program to recognize a valid variable which starts with a letter
 8.	Enter a statement as input and the valid variables are identified as output.
 # PROGRAM
 ```
-// variable_test.l file
+exp4.l
 %{
 #include "y.tab.h"
+#include <string.h>
 %}
 
 %%
-
-"int" { return INT; } "float" { return FLOAT; }
-"double" { return DOUBLE; }
-
-[a-zA-Z][a-zA-Z0-9]* {
-printf("\nIdentifier is %s", yytext); return ID;
-}
-
-. { return yytext[0]; }
-
-\n { return '\\n'; }
-
+[a-zA-Z][a-zA-Z0-9]*    { yylval.str = strdup(yytext); return IDENTIFIER; }
+\n                      { return '\n'; }
+.                       { return yytext[0]; }
 %%
 
-int yywrap() { return 1;
+int yywrap() {
+    return 1;
 }
 
-
-// variable_test.y file
-
+exp4.y
 %{
 #include <stdio.h>
-/* This YACC program is for recognizing the Expression */
+#include <stdlib.h>
+#include <string.h>
+
+extern int yylex();
+void yyerror(const char *msg);
+
 %}
 
-%token ID INT FLOAT DOUBLE
-%% D: T L;
+%union {
+    char *str;
+}
 
-L: L ',' ID   | ID;
-
-T: INT | FLOAT | DOUBLE;
+%token <str> IDENTIFIER
 
 %%
-extern FILE *yyin; int main() {
-do {
-yyparse();
-} while (!feof(yyin)); return 0;
+start:
+    IDENTIFIER '\n' {
+        printf("Valid variable: %s\n", $1);
+        free($1);  // clean up strdup memory
+    }
+    ;
+%%
+
+int main() {
+    printf("Enter a variable name:\n");
+    return yyparse();
 }
 
-void yyerror(char *s) { fprintf(stderr, "Error: %s\n", s);
+void yyerror(const char *msg) {
+    printf("Invalid variable name\n");
 }
+
+
+
+
 ```
 # Output
-![WhatsApp Image 2025-04-17 at 14 23 35_f4d90c15](https://github.com/user-attachments/assets/adf3dcb8-9263-44ef-a203-56cd782fd6de)
+
+![441611472-6892d75b-315c-4f69-a4d5-6bfb1436682b](https://github.com/user-attachments/assets/550108d0-af5b-448a-953a-8e8d77448e11)
+
 
 # Result
 A YACC program to recognize a valid variable which starts with a letter followed by any number of letters or digits is executed successfully and the output is verified.
